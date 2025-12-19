@@ -77,7 +77,7 @@ detect_os_version() {
                 VERSION=9
                 logger "Detected OS: $OS, Version: $VERSION, Architecture: $ARCHITECTURE" "INFO"
             else
-                logger "Unsupported RHEL version: $VERSION" "ERROR" "ERROR"
+                logger "Unsupported RHEL version: $VERSION" "ERROR"
                 exit 1
             fi
             ;;

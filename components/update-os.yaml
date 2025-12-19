@@ -1,62 +1,196 @@
-AWSTemplateFormatVersion: '2010-09-09'
-Description: ImageBuilder Component to run OS updates when building PCS-compatible AMIs
+name: 'Update OS for PCS AMI'
+schemaVersion: 1.0
+phases:
+  - name: build
+    steps:
+### Embedding the update-os.sh and common.sh scripts directly here for testing purposes
+      - name: WriteAndRunScripts
+        action: ExecuteBash
+        inputs:
+          commands:
+            - set -e
+            - |
+              cat << 'EOF' > common.sh
+              
+                    #!/usr/bin/env bash
 
-### Stack metadata
-Metadata:
-  AWS::CloudFormation::Interface:
-    ParameterGroups:
-      - Label:
-          default: HPC Recipes Configuration
-        Parameters:
-          - HpcRecipesS3Bucket
-          - HpcRecipesBranch
+                    # This script update the OS and base packages for AMIs from 
+                    # operating systems supported by AWS PCS. It is intended to 
+                    # replace the UpdateOS ImageBuilder component with a solution
+                    # that is more flexible to the specifics of each supported OS.
+                    #
+                    # Exports OS, VERSION, ARCHITECTURE variables
 
-Parameters:
-  HpcRecipesS3Bucket:
-    Type: String
-    Default: aws-hpc-recipes
-    Description: HPC Recipes for AWS S3 bucket
-    AllowedValues:
-         - aws-hpc-recipes
-         - aws-hpc-recipes-dev
-  HpcRecipesBranch:
-    Type: String
-    Default: main
-    Description: HPC Recipes for AWS release branch
-    AllowedPattern: '^(?!.*/\.git$)(?!.*/\.)(?!.*\\.\.)[a-zA-Z0-9-_\.]+$'
+                    set -o errexit -o pipefail -o nounset
 
-Resources:
-  UpdateOs:
-    Type: AWS::ImageBuilder::Component
-    Properties:
-      Name: !Sub 'UpdateOs-${AWS::StackName}'
-      Description: Update the OS on PCS-compatible AMI base images
-      Version: '0.0.1'
-      Platform: Linux
-      Data: !Sub |
-        name: 'Update OS for PCS AMI'
-        schemaVersion: 1.0
-        phases:
-          - name: build
-            steps:
-              - name: DownloadCommon
-                action: WebDownload
-                inputs:
-                  - source: https://${HpcRecipesS3Bucket}.s3.us-east-1.amazonaws.com/${HpcRecipesBranch}/recipes/pcs/hpc_ready_ami/assets/scripts/common.sh
-                    destination: common.sh
-              - name: DownloadUpdateScript
-                action: WebDownload
-                inputs:
-                  - source: https://${HpcRecipesS3Bucket}.s3.us-east-1.amazonaws.com/${HpcRecipesBranch}/recipes/pcs/hpc_ready_ami/assets/scripts/update-os.sh
-                    destination: update-os.sh
-              - name: ExecuteUpdateScript
-                action: ExecuteBash
-                inputs:
-                  commands:
-                    - set -e
-                    - 'chmod +x update-os.sh'
-                    - './update-os.sh'
+                    OS=""
+                    VERSION=""
+                    ARCHITECTURE=""
 
-Outputs:
-  ImageBuilderComponent:
-    Value: !Ref UpdateOs
+                    # Function to log
+                    logger() {
+                      local script="$0";
+                      local log_message="$1";
+                      local log_level="${2:-INFO}";
+                      local timestamp=$(date +"%Y-%m-%dT%H:%M:%S.%3N%:z");
+                      echo "[$timestamp] - $script: $log_level: $log_message";
+                    }
+
+                    # These are stub functions. In scripts that import common.sh, we expect to find
+                    # functions defined with the same names, one for each OS/version combination.
+                    # 
+                    # If the function isn't defined in the script, it will fall back to the one defined here.
+
+                    handle_ubuntu_22.04() {
+                        logger "Default for Ubuntu 22.04" "WARNING"
+                        export DEBIAN_FRONTEND=noninteractive
+                        export APT_LISTCHANGES_FRONTEND=none
+                    }
+
+                    handle_rhel_9() { 
+                        logger "Default for RHEL 9" "WARNING"
+                    }
+
+                    handle_rocky_9() {
+                        logger "Default for Rocky Linux 9" "WARNING"
+                    }
+
+                    handle_amzn_2() {
+                        logger "Default for Amazon Linux 2" "WARNING"
+                    }
+
+                    detect_os_version() {
+
+                        ARCHITECTURE=$(uname -m)
+
+                        # Detect the operating system
+                        if [ -f /etc/os-release ]; then
+                            # Read the contents of the /etc/os-release file
+                            # shellcheck disable=SC1091
+                            . /etc/os-release
+                            # Extract the operating system ID and version
+                            OS=$ID
+                            VERSION=$VERSION_ID
+                        else
+                            logger "Unable to detect the operating system." "ERROR"
+                            exit 1
+                        fi
+
+                        # Verify if the OS is supported
+                        case "$OS" in
+                            ubuntu)
+                                if [ "$VERSION" == "22.04" ]; then
+                                    logger "Detected OS: $OS, Version: $VERSION, Architecture: $ARCHITECTURE" "INFO"
+                                else
+                                    logger "Unsupported Ubuntu version: $VERSION" "ERROR"
+                                    exit 1
+                                fi
+                                ;;
+                            rhel)
+                                if [[ "$VERSION" =~ ^9\.* ]]; then
+                                    VERSION=9
+                                    logger "Detected OS: $OS, Version: $VERSION, Architecture: $ARCHITECTURE" "INFO"
+                                else
+                                    logger "Unsupported RHEL version: $VERSION" "ERROR"
+                                    exit 1
+                                fi
+                                ;;
+                            rocky)
+                                if [[ "$VERSION" =~ ^9\.* ]]; then
+                                    VERSION=9
+                                    logger "Detected OS: $OS, Version: $VERSION, Architecture: $ARCHITECTURE" "INFO"
+                                else
+                                    logger "Unsupported Rocky Linux version: $VERSION" "ERROR"
+                                    exit 1
+                                fi
+                                ;;
+                            amzn)
+                                if [ "$VERSION" == "2" ]; then
+                                    logger "Detected OS: $OS, Version: $VERSION, Architecture: $ARCHITECTURE" "INFO"
+                                else
+                                    logger "Unsupported Amazon Linux version: $VERSION" "ERROR"
+                                    exit 1
+                                fi
+                                ;;
+                            *)
+                                logger "Unsupported operating system: $OS" "ERROR"
+                                exit 1
+                                ;;
+                        esac
+
+                        export OS
+                        export VERSION
+                        export ARCHITECTURE
+
+                    }
+
+
+
+
+              EOF
+
+            
+            - |
+              cat << 'EOF' > update-os.sh
+                  #!/usr/bin/env bash
+              
+
+                  # This script updates the OS and base packages for AMIs from 
+                  # operating systems supported by AWS PCS. It is intended to 
+                  # replace the UpdateOS ImageBuilder component with a solution
+                  # that is more flexible to the specifics of each supported OS.
+                  #
+                  # It should be followed by an explicit, managed reboot 
+                  # before installing additional software. 
+
+                  set -o errexit -o pipefail -o nounset
+
+                  # Find the directory of the current script
+                  SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+
+                  # Search for common.sh in the current directory and parent directory
+                  if [ -f "${SCRIPT_DIR}/common.sh" ]; then
+                      . "${SCRIPT_DIR}/common.sh"
+                  elif [ -f "${SCRIPT_DIR}/../common.sh" ]; then
+                      . "${SCRIPT_DIR}/../common.sh"
+                  else
+                      echo "Error: common.sh not found!" >&2
+                      exit 1
+                  fi
+
+                  handle_ubuntu_22.04() {
+                      logger "Updating Ubuntu 22.04" "INFO"
+                      sudo apt-get update && sudo apt-get upgrade -y && sudo apt-get autoremove -y && sudo apt-get autoclean
+                  }
+
+                  handle_rhel_9() { 
+                      logger "Updating RHEL 9" "INFO"
+                      # As of 2024-09-13, upgrading kernel to 5.14.0-427.33.1.el9_4.x86_64
+                      # and does not break EFA or Lustre support 
+                      sudo dnf update -y && sudo dnf clean all
+                  }
+
+                  handle_rocky_9() {
+                      logger "Updating Rocky Linux 9" "INFO"
+                      # As of 2024-09-11, upgrading kernel to 5.14.0-427.33.1.el9_4.x86_64
+                      # and does not break EFA or Lustre support 
+                      sudo dnf update -y && sudo dnf clean all
+                  }
+
+                  handle_amzn_2() {
+                      logger "Updating Amazon Linux 2" "INFO"
+                      sudo yum update -y && sudo yum clean all
+                  }
+
+                  # Main function
+                  main() {
+                      detect_os_version
+                      handle_${OS}_${VERSION}
+                  }
+
+                  # Call the main function
+                  main "$@"
+
+              EOF
+            - chmod +x common.sh update-os.sh
+            - ./update-os.sh
