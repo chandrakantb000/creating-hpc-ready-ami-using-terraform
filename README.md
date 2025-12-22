@@ -8,6 +8,7 @@ Steps:
 - [x] testing for one component update-os  
 - [x] creating configuration for infrastructure using tf
 - [x] creation of recipe using tf
+- [ ] make output of image-pipeline visible in cloudwatch log group
 - [ ] creation of components (one by one)
 - [ ] for testing embedding scripts directly to components. 
 - [ ] creation of terraform script
