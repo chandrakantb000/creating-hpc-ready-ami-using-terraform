@@ -53,6 +53,9 @@ phases:
 
                     handle_rocky_9() {
                         logger "Default for Rocky Linux 9" "WARNING"
+
+
+                        
                     }
 
                     handle_amzn_2() {
