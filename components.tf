@@ -70,7 +70,7 @@ resource "aws_imagebuilder_component" "pcs_slurm_install_component" {
   platform              = "Linux"
   version               = "1.0.0"
   supported_os_versions = ["Amazon Linux 2023", "Ubuntu 22.04", "Ubuntu 20.04", "RHEL 8", "RHEL 9"]
-  data                  = file("./components/pcs-slurm-install.yaml")
+  data                  = file("./components/install-pcs-slurm.yaml")
   
 }
 
@@ -89,7 +89,7 @@ resource "aws_imagebuilder_component" "spack_install_component" {
   platform              = "Linux"
   version               = "1.0.0"
   supported_os_versions = ["Amazon Linux 2023", "Ubuntu 22.04", "Ubuntu 20.04", "RHEL 8", "RHEL 9"]
-  data                  = file("./components/spack-install.yaml")
+  data                  = file("./components/install-spack.yaml")
   
 }
 
