@@ -1,0 +1,208 @@
+name: 'CloudwatchAgent install for PCS AMI'
+schemaVersion: 1.0
+phases:
+  - name: build
+    steps:
+### Embedding the install-lustre.sh and common.sh scripts directly here for testing purposes
+      - name: WriteAndRunScripts
+        action: ExecuteBash
+        inputs:
+          commands:
+            - set -e
+            - |
+              cat << 'EOF' > common.sh
+              
+                    #!/usr/bin/env bash
+
+                    # This script update the OS and base packages for AMIs from 
+                    # operating systems supported by AWS PCS. It is intended to 
+                    # replace the UpdateOS ImageBuilder component with a solution
+                    # that is more flexible to the specifics of each supported OS.
+                    #
+                    # Exports OS, VERSION, ARCHITECTURE variables
+
+                    set -o errexit -o pipefail -o nounset
+
+                    OS=""
+                    VERSION=""
+                    ARCHITECTURE=""
+
+                    # Function to log
+                    logger() {
+                      local script="$0";
+                      local log_message="$1";
+                      local log_level="${2:-INFO}";
+                      local timestamp=$(date +"%Y-%m-%dT%H:%M:%S.%3N%:z");
+                      echo "[$timestamp] - $script: $log_level: $log_message";
+                    }
+
+                    # These are stub functions. In scripts that import common.sh, we expect to find
+                    # functions defined with the same names, one for each OS/version combination.
+                    # 
+                    # If the function isn't defined in the script, it will fall back to the one defined here.
+
+                    handle_ubuntu_22.04() {
+                        logger "Default for Ubuntu 22.04" "WARNING"
+                        export DEBIAN_FRONTEND=noninteractive
+                        export APT_LISTCHANGES_FRONTEND=none
+                    }
+
+                    handle_rhel_9() { 
+                        logger "Default for RHEL 9" "WARNING"
+                    }
+
+                    handle_rocky_9() {
+                        logger "Default for Rocky Linux 9" "WARNING"
+
+
+                        
+                    }
+
+                    handle_amzn_2() {
+                        logger "Default for Amazon Linux 2" "WARNING"
+                    }
+
+                    detect_os_version() {
+
+                        ARCHITECTURE=$(uname -m)
+
+                        # Detect the operating system
+                        if [ -f /etc/os-release ]; then
+                            # Read the contents of the /etc/os-release file
+                            # shellcheck disable=SC1091
+                            . /etc/os-release
+                            # Extract the operating system ID and version
+                            OS=$ID
+                            VERSION=$VERSION_ID
+                        else
+                            logger "Unable to detect the operating system." "ERROR"
+                            exit 1
+                        fi
+
+                        # Verify if the OS is supported
+                        case "$OS" in
+                            ubuntu)
+                                if [ "$VERSION" == "22.04" ]; then
+                                    logger "Detected OS: $OS, Version: $VERSION, Architecture: $ARCHITECTURE" "INFO"
+                                else
+                                    logger "Unsupported Ubuntu version: $VERSION" "ERROR"
+                                    exit 1
+                                fi
+                                ;;
+                            rhel)
+                                if [[ "$VERSION" =~ ^9\.* ]]; then
+                                    VERSION=9
+                                    logger "Detected OS: $OS, Version: $VERSION, Architecture: $ARCHITECTURE" "INFO"
+                                else
+                                    logger "Unsupported RHEL version: $VERSION" "ERROR"
+                                    exit 1
+                                fi
+                                ;;
+                            rocky)
+                                if [[ "$VERSION" =~ ^9\.* ]]; then
+                                    VERSION=9
+                                    logger "Detected OS: $OS, Version: $VERSION, Architecture: $ARCHITECTURE" "INFO"
+                                else
+                                    logger "Unsupported Rocky Linux version: $VERSION" "ERROR"
+                                    exit 1
+                                fi
+                                ;;
+                            amzn)
+                                if [ "$VERSION" == "2" ]; then
+                                    logger "Detected OS: $OS, Version: $VERSION, Architecture: $ARCHITECTURE" "INFO"
+                                else
+                                    logger "Unsupported Amazon Linux version: $VERSION" "ERROR"
+                                    exit 1
+                                fi
+                                ;;
+                            *)
+                                logger "Unsupported operating system: $OS" "ERROR"
+                                exit 1
+                                ;;
+                        esac
+
+                        export OS
+                        export VERSION
+                        export ARCHITECTURE
+
+                    }
+
+
+
+
+              EOF
+
+            
+            - |
+              cat << 'EOF' > install-lustre.sh
+              #!/usr/bin/env bash
+
+              # This script enables support for FSx for Lustre
+
+              set -o errexit -o pipefail -o nounset
+
+              # Find the directory of the current script
+              SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+
+              # Search for common.sh in the current directory and parent directory
+              if [ -f "${SCRIPT_DIR}/common.sh" ]; then
+                  . "${SCRIPT_DIR}/common.sh"
+              elif [ -f "${SCRIPT_DIR}/../common.sh" ]; then
+                  . "${SCRIPT_DIR}/../common.sh"
+              else
+                  echo "Error: common.sh not found!" >&2
+                  exit 1
+              fi
+
+              install_redhat9_or_rocky9() {
+                  # Ref: https://docs.aws.amazon.com/fsx/latest/LustreGuide/install-lustre-client.html
+                  # This only covers the happy path where kernel is 5.14.0-427*
+                  curl https://fsx-lustre-client-repo-public-keys.s3.amazonaws.com/fsx-rpm-public-key.asc -o /tmp/fsx-rpm-public-key.asc
+                  sudo rpm --import /tmp/fsx-rpm-public-key.asc
+                  sudo curl https://fsx-lustre-client-repo.s3.amazonaws.com/el/9/fsx-lustre-client.repo -o /etc/yum.repos.d/aws-fsx.repo
+                  sudo yum install -y kmod-lustre-client lustre-client
+                  sudo yum clean all
+              }
+
+              handle_ubuntu_22.04() {
+                  logger "Installing on Ubuntu 22.04" "INFO"
+                  # Ref: https://docs.aws.amazon.com/fsx/latest/LustreGuide/install-lustre-client.html
+                  # This only covers the happy path where kernel is 5.14.0-427*
+                  wget -O - https://fsx-lustre-client-repo-public-keys.s3.amazonaws.com/fsx-ubuntu-public-key.asc | gpg --dearmor | sudo tee /usr/share/keyrings/fsx-ubuntu-public-key.gpg >/dev/null
+                  sudo bash -c 'echo "deb [signed-by=/usr/share/keyrings/fsx-ubuntu-public-key.gpg] https://fsx-lustre-client-repo.s3.amazonaws.com/ubuntu jammy main" > /etc/apt/sources.list.d/fsxlustreclientrepo.list && apt-get update'
+                  # This needs to map to the current kernel version of the instance
+                  # If you have run the kernel downgrade, and there is a newer version of Lustre available
+                  # you will need to update the version below
+                  sudo apt install -y lustre-client-modules-aws=6.5.0.1024.24~22.04.1
+                  sudo apt clean
+              }
+
+              handle_rhel_9() { 
+                  logger "Installing on RHEL 9" "INFO"
+                  install_redhat9_or_rocky9
+              }
+
+              handle_rocky_9() {
+                  logger "Installing on Rocky Linux 9" "INFO"
+                  install_redhat9_or_rocky9
+              }
+
+              handle_amzn_2() {
+                  logger "Installing on Amazon Linux 2" "INFO"
+                  # Ref: https://docs.aws.amazon.com/fsx/latest/LustreGuide/install-lustre-client.html
+                  sudo amazon-linux-extras install -y lustre
+              }
+
+              # Main function
+              main() {
+                  detect_os_version
+                  handle_${OS}_${VERSION}
+              }
+
+              # Call the main function
+              main "$@"
+
+
+              EOF
+            - chmod +x common.sh install-lustre.sh
+            - ./install-lustre.sh
