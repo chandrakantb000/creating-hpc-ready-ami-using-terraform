@@ -9,8 +9,9 @@ Steps:
 - [x] creating configuration for infrastructure using tf
 - [x] creation of recipe using tf
 - [ ] make output of image-pipeline visible in cloudwatch log group
-- [ ] creation of components (one by one)
-- [ ] for testing embedding scripts directly to components. 
+- [x] creation of components (one by one)
+- [x] for testing embedding scripts directly to components.
+- [ ] solving the components not running issue
 - [ ] creation of terraform script
 - [ ] Next step adding the scripts to s3 buckets
 - [ ] adding validation and test phases in all the components
