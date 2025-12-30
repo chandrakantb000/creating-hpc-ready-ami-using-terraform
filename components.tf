@@ -16,7 +16,6 @@ resource "aws_imagebuilder_component" "optimize_performance_component" {
   
 }
 
-
 resource "aws_imagebuilder_component" "cloudwatch_agent_component" {
   name                  = "cloudwatch-agent-component"
   platform              = "Linux"
