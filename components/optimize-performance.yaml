@@ -3,7 +3,7 @@ schemaVersion: 1.0
 phases:
   - name: build
     steps:
-### Embedding the update-os.sh and common.sh scripts directly here for testing purposes
+### Embedding the optimize-performance.sh and common.sh scripts directly here for testing purposes
       - name: WriteAndRunScripts
         action: ExecuteBash
         inputs:
@@ -146,7 +146,15 @@ phases:
                 # Find the directory of the current script
                 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
-                # common.sh injected via Terraform
+                # Search for common.sh in the current directory and parent directory
+                if [ -f "${SCRIPT_DIR}/common.sh" ]; then
+                    . "${SCRIPT_DIR}/common.sh"
+                elif [ -f "${SCRIPT_DIR}/../common.sh" ]; then
+                    . "${SCRIPT_DIR}/../common.sh"
+                else
+                    echo "Error: common.sh not found!" >&2
+                    exit 1
+                fi                
 
                 disable_select_cron_tasks() {
 

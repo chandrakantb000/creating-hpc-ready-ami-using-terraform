@@ -3,7 +3,7 @@ schemaVersion: 1.0
 phases:
   - name: build
     steps:
-### Embedding the install-ssm-agent.sh and common.sh scripts directly here for testing purposes
+### Embedding the install-efa.sh and common.sh scripts directly here for testing purposes
       - name: WriteAndRunScripts
         action: ExecuteBash
         inputs:

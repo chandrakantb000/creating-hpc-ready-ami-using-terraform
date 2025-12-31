@@ -16,6 +16,15 @@ resource "aws_imagebuilder_component" "optimize_performance_component" {
   
 }
 
+
+resource "aws_imagebuilder_component" "optimize_performance_component_1_0_1" {
+  name     = "optimize_performance_component_1_0_1"
+  platform = "Linux"
+  version  = "1.0.1"
+  data     = file("./components/optimize-performance.yaml")
+}
+
+
 resource "aws_imagebuilder_component" "cloudwatch_agent_component" {
   name                  = "cloudwatch-agent-component"
   platform              = "Linux"
