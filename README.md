@@ -13,10 +13,12 @@ Steps:
 - [x] for testing embedding scripts directly to components.
 
 *   [ ] Solving the components not running issue
-    *   [ ] optimize-performance component(detect_os_version issue)
+    *   [x] optimize-performance component(detect_os_version issue)
+    *   [ ] pcs-slurm component installation issue()
+    *   [x] add AWS managed reboot-os component 
 
 - [ ] creation of terraform script
 - [ ] Next step adding the scripts to s3 buckets
 - [ ] adding validation and test phases in all the components
 - [ ] creating distribution
-
+ 

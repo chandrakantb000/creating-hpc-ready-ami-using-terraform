@@ -6,7 +6,7 @@
 
 resource "aws_imagebuilder_image_recipe" "test_all_components_recipe" {         
   name         = "test-all-components-recipe"                                   # recipe name
-  version      = "1.0.2"
+  version      = "1.0.3"
   description  = "Test ImageBuilder recipe for all components"
   parent_image = "ami-0c5ddb3560e768732" # Ubuntu 22.04 ami-id (us-east-2)
 
@@ -24,15 +24,16 @@ resource "aws_imagebuilder_image_recipe" "test_all_components_recipe" {
   component {
     component_arn = aws_imagebuilder_component.optimize_performance_component_1_0_1.arn
   }
-  
+
+  component {
+    component_arn = aws_imagebuilder_component.ssm_agent_component.arn
+  }
+   
   component {
     component_arn = aws_imagebuilder_component.cloudwatch_agent_component.arn
   }
   
-  component {
-    component_arn = aws_imagebuilder_component.ssm_agent_component.arn
-  }
-  
+
   component {
     component_arn = aws_imagebuilder_component.efa_install_component.arn
   }
