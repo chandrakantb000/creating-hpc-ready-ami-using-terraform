@@ -244,7 +244,8 @@ phases:
 
               configure_paths() {
                   local SLURM_INSTALL_PATH="/opt/aws/pcs/scheduler/slurm-${PCS_SLURM_VERSION}"
-
+              
+              # added SLURMEOF to fix syntax highlighting issue
               sudo tee /etc/profile.d/slurm.sh << 'SLURMEOF'
               PATH=\$PATH:${SLURM_INSTALL_PATH}/bin
               MANPATH=\$MANPATH:${SLURM_INSTALL_PATH}/share/man
