@@ -6,7 +6,7 @@
 
 resource "aws_imagebuilder_image_recipe" "test_all_components_recipe" {         
   name         = "test-all-components-recipe"                                   # recipe name
-  version      = "1.0.1"
+  version      = "1.0.2"
   description  = "Test ImageBuilder recipe for all components"
   parent_image = "ami-0c5ddb3560e768732" # Ubuntu 22.04 ami-id (us-east-2)
 
@@ -15,6 +15,11 @@ resource "aws_imagebuilder_image_recipe" "test_all_components_recipe" {
   component {
     component_arn = aws_imagebuilder_component.update_os_component.arn
   }
+
+  component {
+    component_arn = "arn:aws:imagebuilder:${var.aws_region}:aws:component/reboot-linux/x.x.x"
+  }
+
   
   component {
     component_arn = aws_imagebuilder_component.optimize_performance_component_1_0_1.arn

@@ -11,7 +11,10 @@ Steps:
 - [x] make output of image-pipeline visible in cloudwatch log group
 - [x] creation of components (one by one)
 - [x] for testing embedding scripts directly to components.
-- [ ] solving the components not running issue
+
+*   [ ] Solving the components not running issue
+    *   [ ] optimize-performance component(detect_os_version issue)
+
 - [ ] creation of terraform script
 - [ ] Next step adding the scripts to s3 buckets
 - [ ] adding validation and test phases in all the components
