@@ -14,8 +14,9 @@ Steps:
 
 *   [ ] Solving the components not running issue
     *   [x] optimize-performance component(detect_os_version issue)
-    *   [ ] pcs-slurm component installation issue()
+    *   [x] pcs-slurm component installation issue(fixed by adding SLURMEOF in heredoc as earlier adding EOF inside EOF gave error)
     *   [x] add AWS managed reboot-os component 
+    *   [ ] fix spack installation issue()
 
 - [ ] creation of terraform script
 - [ ] Next step adding the scripts to s3 buckets
