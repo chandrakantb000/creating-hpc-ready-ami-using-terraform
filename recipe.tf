@@ -13,7 +13,7 @@ resource "aws_imagebuilder_image_recipe" "test_all_components_recipe" {
   # While installing spack component image build fails with "No space left on device" error on default ubuntu ami root volume size of 8GB.
   # So increasing the root volume size to 50GB.
   block_device_mapping {
-    device_name = "/dev/xvdb"
+    device_name = "/dev/xvda"
 
     ebs {
       delete_on_termination = true
