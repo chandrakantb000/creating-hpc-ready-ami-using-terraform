@@ -6,7 +6,7 @@
 
 resource "aws_imagebuilder_image_recipe" "test_all_components_recipe" {         
   name         = "test-all-components-recipe"                                   # recipe name
-  version      = "1.0.4"
+  version      = "1.0.5"
   description  = "Test ImageBuilder recipe for all components"
   parent_image = "ami-0c5ddb3560e768732" # Ubuntu 22.04 ami-id (us-east-2)
 
