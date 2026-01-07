@@ -6,14 +6,14 @@
 
 resource "aws_imagebuilder_image_recipe" "test_all_components_recipe" {         
   name         = "test-all-components-recipe"                                   # recipe name
-  version      = "1.0.5"
+  version      = "1.0.6"
   description  = "Test ImageBuilder recipe for all components"
   parent_image = "ami-0c5ddb3560e768732" # Ubuntu 22.04 ami-id (us-east-2)
 
   # While installing spack component image build fails with "No space left on device" error on default ubuntu ami root volume size of 8GB.
   # So increasing the root volume size to 50GB.
   block_device_mapping {
-    device_name = "/dev/xvda"
+    device_name = "/dev/sda1"           # Ubuntu expects root on /dev/sda1, if we declare /dev/xvda AWS may silently ignore it
 
     ebs {
       delete_on_termination = true
