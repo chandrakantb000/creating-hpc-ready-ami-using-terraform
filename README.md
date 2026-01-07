@@ -16,10 +16,9 @@ Steps:
     *   [x] optimize-performance component(detect_os_version issue)
     *   [x] pcs-slurm component installation issue(fixed by adding SLURMEOF in heredoc as earlier adding EOF inside EOF gave error)
     *   [x] add AWS managed reboot-os component 
-    *   [ ] fix spack installation issue([1st issue was regarding chmod, basically efs-utils script was pasted so that gave error], [2nd issue is regarding memory that is after cloning, there is no space left on device.])
+    *   [x] fix spack installation issue([1st issue was regarding chmod, basically efs-utils script was pasted so that gave error], [2nd issue is regarding memory that is after cloning, there is no space left on device.])
+    *   [ ] Add apptainer component
 
-- [ ] creation of terraform script
-- [ ] Next step adding the scripts to s3 buckets
 - [ ] adding validation and test phases in all the components
-- [ ] creating distribution
- 
+- [x] creating distribution
+- [ ] Next step adding the scripts to s3 buckets 
